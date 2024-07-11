@@ -1,0 +1,361 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+
+  
+  <main id="main" class="main">
+
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+
+          <div class="card">
+            <div class="card-body" style="padding-top: 20px;">
+              <!-- General Form Elements -->
+              <form id="searchform">
+              <input type='hidden' id='upCtCd' name='upCtCd'>
+			  <input type='hidden' id='ctLevel' name='ctLevel'>
+			  <input type='hidden' id='ctName' name='ctName'>
+              <table class="col-lg-12">
+			    <tr>
+			        <td>
+			            <div class="row mb-2">
+			                <label for="inputText" class="col-sm-2 col-form-label">상품명</label>
+			                <div class="col-sm-3">
+			                    <input type="text" class="form-control" name="goodsName">
+			                </div>
+			            </div>
+			        </td>
+			        <td>
+			            <div class="row mb-2">
+			                <label for="inputText" class="col-sm-3 col-form-label">상품상태</label>
+			                <div class="col-sm-3">
+			                    <select id="code1" name="goodsStatus" class="form-control" style="width: 150px;">
+			                        <option value="">상품상태</option>
+			                        <option value="판매중">판매중</option>
+			                        <option value="종료">종료</option>
+			                    </select> 
+			                </div>
+			            </div>     
+			        </td>
+			        <td>
+			            <div class="row mb-2">
+			                <label for="inputText" class="col-sm-3 col-form-label">카테고리</label>
+			                <div class="col-sm-6">
+			                    <select id="mCtCd" name="mCtCd" onchange="onBox1();" class="form-control" style="width: 150px;">
+			                        <option value="">대분류</option>
+			                    </select>
+			                    <select id="sCtCd" name="sCtCd" onchange="onBox2();" class="form-control" style="width: 150px;">
+			                        <option value="">중분류</option>
+			                    </select>
+			                    <select id="dCtCd" name="dCtCd" onchange="onBox3();" class="form-control" style="width: 150px;">
+			                        <option value="">소분류</option>
+			                    </select> 
+			                </div>
+			            </div>      
+			        </td>
+			        <td>
+			            <button type="button" class="btn btn-info" onclick='search();'>조회</button>
+			            <button type="button" class="btn btn-info" onclick='inSearch();'>등록</button>
+			        </td>
+			        </tr>
+			        <tr>
+			        <td>
+			            <div class="row mb-4">
+			                <label for="inputText" class="col-sm-2 col-form-label">거래처</label>
+			                <div class="col-sm-6">
+			                    <select id="supp" name="supplierCd" class="form-control" style="width: 150px;">
+			                        <option value="">거래처</option>
+			                    </select> 
+			                </div>
+			            </div>      
+			        </td>
+			        </tr>
+			</table>
+                
+             </form>
+              
+            </div>
+          </div>
+           <div class="card">
+            <div class="card-body">
+              <!-- Table with hoverable rows -->
+              <table id="goodsTable" class="table table-hover">
+                <thead>
+                  <tr>
+                    <th scope="col">No</th>
+                    <th scope="col">상품코드</th>
+                    <th scope="col">상품명</th>
+                    <th scope="col">카테고리</th>
+                    <th scope="col">판매가</th>
+                    <th scope="col">재고량</th>
+                    <th scope="col">등록일</th>
+                    <th scope="col">상품상태</th>
+                  </tr>
+                </thead>
+                <tbody>
+                
+				</tbody>
+              </table>
+              <!-- End Table with hoverable rows -->
+			  <nav aria-label="Page navigation example">
+                <ul class="pagination">
+                  <li class="page-item">
+                    <a class="page-link" href="#" aria-label="Previous">
+                      <span aria-hidden="true">&laquo;</span>
+                    </a>
+                  </li>
+                  <li class="page-item"><a class="page-link" href="#">1</a></li>
+                  <li class="page-item"><a class="page-link" href="#">2</a></li>
+                  <li class="page-item"><a class="page-link" href="#">3</a></li>
+                  <li class="page-item">
+                    <a class="page-link" href="#" aria-label="Next">
+                      <span aria-hidden="true">&raquo;</span>
+                    </a>
+                  </li>
+                </ul>
+              </nav><!-- End Pagination with icons -->
+			   	
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <div class="modal fade" id="goodsInfo" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">상품등록/수정</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+            <form id='goodsform'>
+                <table class="table table-hover" >
+                    <thead>
+                    <tbody>
+                        <tr>
+                            <th scope="col">상품코드</th>
+                            <td ><input type='text' id='goodsCd' name='goodsCd' readonly="readonly"></td>
+                            <th scope="col">(상품코드는 수정이 불가합니다.)</th>
+                        </tr>
+                        <tr>
+						    <th scope="row">상품명</th>
+						    <td><input type='text' id="goodsName" name="goodsName"></td>
+						</tr>
+                        <tr>
+						    <th scope="row">정상가</th>
+						    <td><input type='text' id="normalPrice" name="normalPrice"></td>
+						    <th scope="row">판매가</th>
+						    <td><input type='text' id="sellPrice" name="sellPrice"></td>
+						</tr>
+                        <tr>
+                            <th scope="row">재고수량</th>
+                            <td><input type='text' id="ivQty" name="ivQty"></td>
+                            <th scope="row">상품상태</th>
+                            <td>
+                            <select id="code2" name="goodsStatus2" class="form-control" style="width: 150px;">
+			                        <option value="">상품상태</option>
+			                        <option value="판매중">판매중</option>
+			                        <option value="종료">종료</option>
+			                    </select> 
+                        	</td>
+                        	</tr>
+                        	<tr>
+						    <th scope="row">카테고리</th>
+						    <td>
+						        <select id="m2CtCd" name="m2CtCd" onchange="onBox4();" class="form-control" style="width: 150px;">
+						            <option value="">대</option>
+						        </select>
+						    </td>
+						    <td>
+						        <select id="s2CtCd" name="s2CtCd" onchange="onBox5();" class="form-control" style="width: 150px;">
+						            <option value="">중</option>
+						        </select>
+						    </td>
+						    <td>
+						        <select id="d2CtCd" name="d2CtCd" onchange="onBox6();" class="form-control" style="width: 150px;">
+						            <option value="">소</option>
+						        </select>
+						    </td>
+						    <th scope="row">거래처</th>
+						    <td>
+						        <select id="supp2" name="supplierCd" class="form-control" style="width: 150px;">
+						            <option value="">거래처</option>
+						        </select>
+						    </td>
+						</tr>
+                        <tr>
+						    <th scope="row">썸네일</th>
+						    <td colspan="2"><input type="text" id="thumnailUrl" name="thumnailUrl"></td>
+						</tr>
+                        <tr>
+                            <th scope="row">설명</th>
+                            <td colspan="2"><textarea id="content" name="content" rows="4" cols="50"></textarea></td>
+                        </tr>
+                    </tbody>
+                    </thead>
+                </table>
+                </form>
+            </div>
+            <div class="modal-footer">
+            	<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick='goodsUp();'>저장</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+  	<form id="hiddenform">
+  		<input type='hidden' id='hgoodsCd' name='goodsCd'>
+  	</form> 
+  	<script>
+  	function search() {
+  	    call_server(searchform, '/goods/searchlist', getGoodsList);
+	}
+	
+	function getGoodsList(list) {
+	    $('#goodsTable > tbody').empty(); // 테이블 내용 초기화
+	    for (var i = 0; i < list.length; i++) {
+	    	var str = "<tr onclick=\"goodsDetail('" + list[i].goodsCd + "');\" style=\"cursor:pointer;\">";
+	        str += "<th scope=\"row\">" + (i + 1) + "</th>";
+	        str += "<td>" + list[i].goodsCd + "</td>";
+	        str += "<td>" + list[i].goodsName + "</td>";
+	        str += "<td>" + list[i].ctName + "</td>";
+	        str += "<td>" + list[i].sellPrice + "</td>";
+	        str += "<td>" + list[i].ivQty + "</td>";
+	        str += "<td>" + list[i].regDt + "</td>";
+	        str += "<td>" + list[i].goodsStatus + "</td>";
+	        str += "</tr>";
+	        $('#goodsTable > tbody').append(str);
+	        
+	   
+	    }
+	}
+	
+	function goodsDetail(cd) {
+	    $('#hgoodsCd').val(cd);
+	    // '/goods/goodsdetail' 엔드포인트로 요청을 보내고 응답을 처리하는 콜백 함수
+	    var handleGoodsDetail = function(vo) {
+	        getGoodsDetail(vo); // 상품 정보를 처리하는 함수 호출
+	        call_server(searchform, '/goods/search2', getSupplierCd); // 다음 요청을 보냅니다.
+	    };
+	    call_server(hiddenform, '/goods/goodsdetail', handleGoodsDetail); // 첫 번째 요청을 보냅니다.
+	}
+
+	function getGoodsDetail(vo) {
+	    $('#goodsCd').val(vo.goodsCd);
+	    $('#goodsName').val(vo.goodsName);
+	    $('#normalPrice').val(vo.normalPrice);
+	    $('#sellPrice').val(vo.sellPrice);
+	    $('#ivQty').val(vo.ivQty);
+	    $('#goodsStatus').val(vo.goodsStatus);
+	    $('#ctCd').val(vo.ctCd);
+	    $('#supplierCd').val(vo.supplierCd);
+	    $('#thumnailUrl').val(vo.thumnailUrl);
+	    $('#content').val(vo.content);
+	    $('#goodsInfo').modal('show');
+	}
+	
+	function getSupplierCdModal(vo){
+		for(var i=0;i<vo.supplist.length;i++){
+			$('#supp2').append( "<option value='"+vo.supplist[i].supplierCd+"'>"+vo.supplist[i].supplierName+"</option>" );
+		}
+		for(var i=0;i<vo.catelist.length;i++){
+			$('#m2CtCd').append( "<option value='"+vo.catelist[i].ctCd+"'>"+vo.catelist[i].ctName+"</option>" );
+		}		
+	}
+	function goodsUp() {
+		call_server(goodsform, '/goods/goodsUp', getGoodsUp);
+		call_server(goodsform, '/goods/goodsIp', getGoodsIn);
+	    
+	}	
+	function getGoodsUp(cnt) {
+		if(cnt>0){
+			alert('저장되었습니다.');
+			$('#goodsInfo').modal('hide');
+			search();
+		}else{
+			alert("수정시 오류발생하엿습니다.");
+		}
+	}
+	
+	function getGoodsIn(cnt) {
+		if(cnt>0){
+			alert('저장되었습니다.');
+			$('#goodsInfo').modal('hide');
+			search();
+		}else{
+			alert("수정시 오류발생하엿습니다.");
+		}
+	}
+	
+	function inSearch() {
+		$('#goodsCd').removeAttr('readonly');
+	    resetForm(); // 입력 필드 초기화
+	    $('#goodsInfo').modal('show');
+	    
+	}
+
+	function resetForm() {
+	    // 입력 필드의 값을 초기화
+	    $('#goodsCd').val('');
+	    $('#goodsName').val('');
+	    $('#normalPrice').val('');
+	    $('#sellPrice').val('');
+	    $('#ivQty').val('');
+	    $('#goodsStatus').val('');
+	    $('#ctCd').val('');
+	    $('#supplierCd').val('');
+	    $('#thumnailUrl').val('');
+	    $('#content').val('');
+	}
+	
+	function inBox() {
+        call_server(searchform, '/goods/search2', getSupplierCd);
+    }
+	
+	function getSupplierCd(vo){
+		for(var i=0;i<vo.supplist.length;i++){
+			$('#supp').append( "<option value='"+vo.supplist[i].supplierCd+"'>"+vo.supplist[i].supplierName+"</option>" );
+		}
+		for(var i=0;i<vo.catelist.length;i++){
+			$('#mCtCd').append( "<option value='"+vo.catelist[i].ctCd+"'>"+vo.catelist[i].ctName+"</option>" );
+		}		
+	}
+	inBox();
+	
+	
+	function onBox1() {
+		var cd = $('#mCtCd').val(); // 대분류 코드 가져오기
+		$('#upCtCd').val(cd);
+        $('#ctLevel').val('2');
+        call_server(searchform, '/goods/search', getGoodsCt1);
+    }
+	
+	function getGoodsCt1(list){
+		$('#sCtCd').empty();
+    	$('#sCtCd').append("<option value=''>중분류 선택</option>");
+        for (var i = 0; i < list.length; i++) {
+            var str = "<option value='"+list[i].ctCd+"'>"+list[i].ctName+"</option>";
+            $("#sCtCd").append(str);
+            
+        }
+	}
+	
+	function onBox2() {
+		var cd = $('#sCtCd').val(); // 중분류 코드 가져오기
+		$('#upCtCd').val(cd);
+        $('#ctLevel').val('3');
+        call_server(searchform, '/goods/search', getGoodsCt2);
+    }
+	
+	function getGoodsCt2(list){
+		$('#dCtCd').empty();
+    	$('#dCtCd').append("<option value=''>소분류 선택</option>");
+        for (var i = 0; i < list.length; i++) {
+            var str = "<option value='"+list[i].ctCd+"'>"+list[i].ctName+"</option>";
+            $("#dCtCd").append(str);         
+        }
+	}
+	</script>

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shop.goods.dao.GoodsDao">
+	
+	<resultMap type="com.shop.table.vo.GoodsInfoVO" id="goodsMap">
+		<result property="goodsCd" column="goods_cd" />
+		<result property="ctCd" column="ct_cd" />
+		<result property="goodsName" column="goods_name" />
+		<result property="normalPrice" column="normal_price" />
+		<result property="sellPrice" column="sell_price" />
+		<result property="ivQty" column="iv_qty" />
+		<result property="goodsStatus" column="goods_status" />
+		<result property="supplierCd" column="supplier_cd" />
+		<result property="thumnailUrl" column="thumnail_url" />
+		<result property="content" column="content" />
+		<result property="ctName" column="ct_name" />
+		<result property="ctLevel" column="ct_level" />
+		<result property="upCtCd" column="up_ct_cd" />
+		<result property="regDt" column="reg_dt" />
+		
+	</resultMap>
+	
+	<resultMap type="com.shop.table.vo.SupplierInfoVO" id="supplierMap">
+		<result property="supplierCd" 	column="supplier_cd" />
+		<result property="supplierName" column="supplier_name" />
+	</resultMap>
+	
+	<select id="selectGoodsInfo" resultMap="goodsMap">
+		SELECT
+		GOODS_CD,
+		GOODS_NAME,
+		CT_CD,
+		SELL_PRICE,
+		IV_QTY,
+		RET_DT,
+		GOODS_STATUS
+		FROM TB_GOODS_INFO		
+	</select>
+	
+	<select id="selectGoodsList" resultMap="goodsMap">
+		SELECT 
+		CT_CD,
+		CT_NAME, 
+		CT_LEVEL, 
+		UP_CT_CD
+	    FROM TB_GOODS_CATEGORY
+	    WHERE 1=1
+	    <if test="ctLevel!=null and ctLevel!=''">
+	    AND CT_LEVEL=#{ctLevel}
+	    </if>
+	    <if test="upCtCd !=null and upCtCd!=''">
+	    AND UP_CT_CD = #{upCtCd}	
+	    </if>
+	    
+	</select>
+	
+	<insert id="insertGoodsList" parameterType="com.shop.table.vo.GoodsInfoVO">
+	    INSERT INTO TB_GOODS_CATEGORY
+		(CT_CD, CT_NAME, CT_LEVEL, UP_CT_CD, REG_DT)
+		SELECT CT_CD, #{ctName}, #{ctLevel}, #{upCtCd}, SYSDATE
+		FROM
+		(
+		SELECT REPLACE(#{upCtCd} || NVL(TO_CHAR(SUBSTR(MAX(CT_CD),NVL(LENGTH(#{upCtCd}),0)+1,2)+1,'00'),'01'), ' ','') CT_CD
+		FROM TB_GOODS_CATEGORY
+		WHERE 1=1
+		<if test="upCtCd!=null and upCtCd!=''">
+		AND UP_CT_CD = #{upCtCd}
+		</if>
+		AND CT_LEVEL = #{ctLevel}
+		)
+	</insert>
+	
+	<select id="selectGoodsSearchList" resultMap="goodsMap">
+	    SELECT 
+		    A.CT_NAME, 
+		    B.GOODS_CD,
+		    B.GOODS_NAME,
+		    B.CT_CD AS B_CT_CD,
+		    B.SELL_PRICE,
+		    B.IV_QTY,
+		    B.REG_DT,
+		    B.GOODS_STATUS
+		FROM TB_GOODS_INFO B
+		JOIN TB_GOODS_CATEGORY A ON B.CT_CD = A.CT_CD
+	    <if test="goodsName != null and goodsName != ''">
+	        AND B.GOODS_NAME LIKE '%' || #{goodsName} || '%'
+	    </if>
+	    <if test="goodsStatus != null and goodsStatus != ''">
+	        AND B.GOODS_STATUS = #{goodsStatus}
+	    </if>
+	    <if test="supplierCd != null and supplierCd != ''">
+	    	AND B.SUPPLIER_Cd = #{supplierCd}
+	    </if>
+	    <if test="ctLevel !=null and ctLevel !=''">
+	    	AND A.CT_LEVEL = #{ctLevel}
+	    </if>
+	    <if test="upCtCd !=null and upCtCd !=''">
+	    	AND A.UP_CT_CD = #{upCtCd}	
+	    </if>
+	    <if test="ctName !=null and ctName !=''">
+	    	AND A.ct_name = #{ctName}	
+	    </if>
+	</select>
+
+
+	
+	<select id="selectGoodsOrderList" resultMap="goodsMap">
+    	SELECT 
+        GOODS_CD,
+        GOODS_NAME,
+        NORMAL_PRICE,
+        SELL_PRICE,
+        IV_QTY,
+        GOODS_STATUS,
+        CT_CD,
+        SUPPLIER_CD,
+        THUMNAIL_URL,
+        CONTENT
+    	FROM TB_GOODS_INFO
+    	WHERE GOODS_CD = #{goodsCd}
+	</select>
+	
+	<update id="updateGoodsInfo">
+	    UPDATE TB_GOODS_INFO SET
+	    	GOODS_NAME = #{goodsName},
+	        NORMAL_PRICE = #{normalPrice},
+	        SELL_PRICE = #{sellPrice},
+	        IV_QTY = #{ivQty},
+	        GOODS_STATUS = #{goodsStatus},
+	        CT_CD = #{ctCd},
+	        SUPPLIER_CD = #{supplierCd},
+	        THUMNAIL_URL = #{thumnailUrl},
+	        CONTENT = #{content}
+	   WHERE GOODS_CD = #{goodsCd}
+	</update>
+	
+	<insert id="insertGoodsInfo" parameterType="com.shop.table.vo.GoodsInfoVO">
+		INSERT INTO TB_GOODS_INFO
+		    (GOODS_CD,
+		    GOODS_NAME,
+		    CT_CD,
+		    NORMAL_PRICE,
+		    SELL_PRICE,
+		    IV_QTY,
+		    GOODS_STATUS,
+		    SUPPLIER_CD,
+		    THUMNAIL_URL,
+		    CONTENT)
+		    VALUES
+		    (#{goodsCd},
+		    #{goodsName},
+		    #{ctCd},
+		    #{normalPrice},
+		    #{sellPrice},
+		    #{ivQty},
+		    #{goodsStatus},
+		    #{supplierCd},
+		    #{thumnailUrl},
+		    #{content}
+	</insert>
+	
+	<select id="selectSupplierList" resultMap="supplierMap">
+		SELECT SUPPLIER_CD, SUPPLIER_NAME
+		 FROM TB_SUPPLIER_INFO
+	</select>
+</mapper>

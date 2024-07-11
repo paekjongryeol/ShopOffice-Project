@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shop.order.dao.OrderDao">
+	
+	<resultMap type="com.shop.table.vo.OrderInfoVO" id="orderMap">
+	    <result property="orderNo" column="order_no" />
+	    <result property="userId" column="user_id" />
+	    <result property="orderGoodsName" column="order_goods_name" />
+	    <result property="orderPrice" column="order_price" />
+	    <result property="orderStatus" column="order_status" />
+	    <result property="orderDt" column="order_dt" />
+	    <result property="receiveName" column="receive_name" />
+	    <result property="zipcd" column="zipcd" />
+	    <result property="addr" column="addr" />
+	    <result property="addrDtl" column="addr_dtl" />
+	    <result property="memo" column="memo" />
+	    <result property="regDt" column="reg_dt" />
+	    <result property="payment" column="payment" />
+	    <result property="userName" column="user_name" />
+	    <result property="phone" column="phone" />
+
+	</resultMap>
+	
+		<resultMap type="com.shop.table.vo.OrderGoodsVO" id="ordergoodsMap">
+			<result property="orderNo" column="order_no" />
+			<result property="goodsCd" column="goods_cd" />
+			<result property="unitPrice" column="unit_price" />
+			<result property="buyQty" column="buy_qty" />
+			<result property="ctName" column="ct_name" />
+			<result property="goodsName" column="goods_name" />
+			<result property="ivQty" column="iv_qty" />
+						
+	    </resultMap>
+	    
+	<select id="selectTotalOrderCount" resultType="integer">
+			SELECT COUNT(*)
+		    FROM
+		   		TB_ORDER_INFO A
+			JOIN
+			    TB_USER_INFO B
+			ON
+			    A.USER_ID = B.USER_ID
+			WHERE 1=1
+			<if test="userName!=null and userName!=''">
+		    AND B.user_name LIKE '%'||#{userName}||'%'
+			</if>
+			<if test="orderStatus != null and orderStatus != ''">
+			    AND A.ORDER_STATUS = #{orderStatus}
+			</if>
+			<if test="payment != null and payment != ''">
+				AND A.PAYMENT = #{payment}
+			</if>
+			<if test="orderDtFrom!=null and orderDtFrom!=''">
+			    AND TO_CHAR(order_dt,'yyyy-mm-dd') <![CDATA[ >= ]]> #{orderDtFrom}
+			</if>
+			<if test="orderDtTo!=null and orderDtTo!=''">
+			    AND TO_CHAR(order_dt,'yyyy-mm-dd') <![CDATA[ <= ]]> #{orderDtTo}
+			</if>
+		</select>
+	
+	<select id="selectOrderList" resultMap="orderMap">
+		SELECT
+		    ORDER_NO,
+		    USER_ID,
+		    USER_NAME,
+		    ORDER_GOODS_NAME,
+		    ORDER_PRICE,
+		    PAYMENT,
+		    ORDER_STATUS,
+		    ORDER_DT
+		FROM (
+			SELECT 
+				ROWNUM AS RN,
+				A.ORDER_NO,
+			    A.USER_ID,
+			    B.USER_NAME,
+			    A.ORDER_GOODS_NAME,
+			    A.ORDER_PRICE,
+			    A.PAYMENT,
+			    A.ORDER_STATUS,
+			    A.ORDER_DT
+		FROM
+		    TB_ORDER_INFO A
+		JOIN
+		    TB_USER_INFO B
+		ON
+		    A.USER_ID = B.USER_ID
+		WHERE 1=1
+		<if test="userName!=null and userName!=''">
+		    AND B.user_name LIKE '%'||#{userName}||'%'
+		</if>
+		<if test="orderStatus != null and orderStatus != ''">
+			AND A.ORDER_STATUS = #{orderStatus}
+		</if>
+		<if test="payment != null and payment != ''">
+			AND A.PAYMENT = #{payment}
+		</if>
+		<if test="orderDtFrom!=null and orderDtFrom!=''">
+		    AND TO_CHAR(order_dt,'yyyy-mm-dd') <![CDATA[ >= ]]> #{orderDtFrom}
+		</if>
+		<if test="orderDtTo!=null and orderDtTo!=''">
+		    AND TO_CHAR(order_dt,'yyyy-mm-dd') <![CDATA[ <= ]]> #{orderDtTo}
+		</if>
+		)
+	    WHERE RN <![CDATA[ > ]]> (#{currentPage}-1)*#{countPerPage} 
+	    AND RN <![CDATA[ <= ]]> #{currentPage}*#{countPerPage}
+	</select>
+	
+	<update id='updateOrderInfo1'>
+		UPDATE TB_ORDER_INFO
+			SET 
+				ORDER_STATUS = #{orderStatus}
+		WHERE ORDER_NO IN 
+		<foreach item="item" index="index" collection="ordernolist"
+	      open="(" separator="," close=")">
+	        #{item}
+	 	 </foreach>
+  
+	</update>
+	
+	<update id='updateOrderInfo2'>
+	    UPDATE TB_ORDER_INFO
+	    SET 
+	        ORDER_STATUS = #{orderStatus}
+	    WHERE ORDER_NO = #{orderNo}
+	    <if test="orderNo!=null and orderNo!=''">
+		    AND ORDER_NO = #{orderNo}
+		</if>
+
+	</update>
+
+	
+	<select id="selectOrderInfo" resultMap="orderMap">
+			SELECT
+			    A.ORDER_NO,
+			    A.USER_ID,
+			    B.USER_NAME,
+			    A.ORDER_STATUS,
+			    A.ORDER_DT,
+			    A.ORDER_PRICE,
+			    A.RECEIVE_NAME,
+			    B.PHONE,
+			    A.ADDR_DTL,
+			    A.MEMO,
+			    A.PAYMENT
+			FROM
+			    TB_ORDER_INFO A
+			JOIN
+			    TB_USER_INFO B
+			ON
+			    A.USER_ID = B.USER_ID
+			WHERE
+                A.ORDER_NO = #{orderNo}
+            AND
+                B.USER_ID = #{userId}
+
+		</select>
+		
+		<select id="selectGoodsList" resultMap="ordergoodsMap">
+		    SELECT
+			    C.CT_NAME,
+			    A.GOODS_CD,
+			    A.GOODS_NAME,
+			    B.UNIT_PRICE,
+			    A.IV_QTY,
+			    B.BUY_QTY
+			FROM TB_GOODS_INFO  A, TB_ORDER_GOODS B, TB_GOODS_CATEGORY C
+			WHERE
+                A.GOODS_CD = B.GOODS_CD
+            AND A.CT_CD = C.CT_CD
+			AND	B.ORDER_NO = #{orderNo}
+		</select>
+
+</mapper>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shop.schedule.dao.DailyOrderDao">
+	
+	<resultMap type="com.shop.table.vo.DailyOrderInfoVO" id="dailyOrderMap">
+	    <result property="orderDt" column="order_dt" />
+	    <result property="goodsCd" column="goods_cd" />
+	    <result property="sellCnt" column="sell_cnt" />
+	    <result property="sellPrice" column="sell_price" />
+	    <result property="regDt" column="reg_dt" />
+	</resultMap>
+	    
+	<insert id="insertOrderList" parameterType="com.shop.table.vo.DailyOrderInfoVO">
+		INSERT INTO TB_DAILY_ORDER (ORDER_DT, GOODS_CD, SELL_CNT, SELL_PRICE, REG_DT)
+			SELECT
+			    A.ORDER_DT,
+			    B.GOODS_CD,
+			    SUM(B.BUY_QTY) AS SELL_CNT,
+			    SUM(B.BUY_QTY * A.ORDER_PRICE) AS SELL_PRICE,
+			    SYSDATE
+			FROM
+			    TB_ORDER_INFO A, TB_ORDER_GOODS B
+			WHERE 
+			    A.ORDER_NO = B.ORDER_NO
+			GROUP BY
+			    A.ORDER_DT,
+			    B.GOODS_CD
+	</insert>
+	
+</mapper>

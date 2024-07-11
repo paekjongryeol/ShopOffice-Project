@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shop.goods.dao.GoodsDao">
+	
+	<resultMap type="com.shop.table.vo.GoodsInfoVO" id="goodsMap">
+		<result property="goodsCd" column="goods_cd" />
+		<result property="ctCd" column="ct_cd" />
+		<result property="goodsName" column="goods_name" />
+		<result property="normalPrice" column="normal_price" />
+		<result property="sellPrice" column="sell_price" />
+		<result property="ivQty" column="iv_qty" />
+		<result property="goodsStatus" column="goods_status" />
+		<result property="supplierCd" column="supplier_cd" />
+		<result property="thumnailUrl" column="thumnail_url" />
+		<result property="content" column="content" />
+		<result property="ctName" column="ct_name" />
+		<result property="ctLevel" column="ct_level" />
+		<result property="upCtCd" column="up_ct_cd" />
+		<result property="regDt" column="reg_dt" />
+		
+	</resultMap>
+	
+	<resultMap type="com.shop.table.vo.SupplierInfoVO" id="supplierMap">
+		<result property="supplierCd" 	column="supplier_cd" />
+		<result property="supplierName" column="supplier_name" />
+	</resultMap>
+	
+	<select id="selectGoodsInfo" resultMap="goodsMap">
+		SELECT
+		GOODS_CD,
+		GOODS_NAME,
+		CT_CD,
+		SELL_PRICE,
+		IV_QTY,
+		RET_DT,
+		GOODS_STATUS
+		FROM TB_GOODS_INFO		
+	</select>
+	
+	<select id="selectGoodsList" resultMap="goodsMap">
+		SELECT 
+		CT_CD,
+		CT_NAME, 
+		CT_LEVEL, 
+		UP_CT_CD
+	    FROM TB_GOODS_CATEGORY
+	    WHERE 1=1
+	    <if test="ctLevel!=null and ctLevel!=''">
+	    AND CT_LEVEL = #{ctLevel}
+	    </if>
+	    <if test="upCtCd !=null and upCtCd!=''">
+	    AND UP_CT_CD = #{upCtCd}	
+	    </if>
+	    <if test="ctCd !=null and ctCd !=''">
+	    AND UP_CT_CD = SUBSTR(( SELECT UP_CT_CD FROM TB_GOODS_CATEGORY WHERE CT_CD = #{ctCd}),0,(#{ctLevel}-1)*2)
+	    </if>
+	   	</select>
+	
+	<select id="selectTotalGoodsCount" resultType="integer">
+	    SELECT COUNT(*)
+	    FROM TB_GOODS_INFO B
+	    JOIN TB_GOODS_CATEGORY A ON B.CT_CD = A.CT_CD
+	    WHERE 1=1
+	    <if test="goodsName != null and goodsName != ''">
+	        AND B.GOODS_NAME LIKE '%' || #{goodsName} || '%'
+	    </if>
+	    <if test="goodsStatus != null and goodsStatus != ''">
+	        AND B.GOODS_STATUS = #{goodsStatus}
+	    </if>
+	    <if test="supplierCd != null and supplierCd != ''">
+	        AND B.SUPPLIER_CD = #{supplierCd}
+	    </if>
+	    <if test="mCtCd != null and mCtCd != ''">
+	        AND B.CT_CD like #{mCtCd} || '%'
+	    </if>
+	    <if test="sCtCd != null and sCtCd != ''">
+	        AND B.CT_CD like #{sCtCd} || '%'
+	    </if>
+	    <if test="dCtCd != null and dCtCd != ''">
+	        AND B.CT_CD like #{dCtCd} || '%'
+	    </if>
+	</select>
+
+	<select id="selectGoodsSearchList" resultMap="goodsMap">
+	    SELECT
+	        CT_NAME,
+	        GOODS_CD,
+	        GOODS_NAME,
+	        CT_CD,
+	        SELL_PRICE,
+	        IV_QTY,
+	        REG_DT,
+	        GOODS_STATUS
+	    FROM (
+	        SELECT 
+	            ROWNUM AS RN,
+	            A.CT_NAME, 
+	            B.GOODS_CD,
+	            B.GOODS_NAME,
+	            B.CT_CD, 
+	            B.SELL_PRICE,
+	            B.IV_QTY,
+	            B.REG_DT,
+	            B.GOODS_STATUS
+	        FROM TB_GOODS_INFO B
+	        JOIN TB_GOODS_CATEGORY A ON B.CT_CD = A.CT_CD
+	        WHERE 1=1
+	        <if test="goodsName != null and goodsName != ''">
+	            AND B.GOODS_NAME LIKE '%' || #{goodsName} || '%'
+	        </if>
+	        <if test="goodsStatus != null and goodsStatus != ''">
+	            AND B.GOODS_STATUS = #{goodsStatus}
+	        </if>
+	        <if test="supplierCd != null and supplierCd != ''">
+	            AND B.SUPPLIER_CD = #{supplierCd}
+	        </if>
+	        <if test="mCtCd != null and mCtCd != ''">
+	            AND B.CT_CD like #{mCtCd} || '%'
+	        </if>
+	        <if test="sCtCd != null and sCtCd != ''">
+	            AND B.CT_CD like #{sCtCd} || '%'
+	        </if>
+	        <if test="dCtCd != null and dCtCd != ''">
+	            AND B.CT_CD like #{dCtCd} || '%'
+	        </if>
+	    ) B
+	    WHERE RN <![CDATA[ > ]]> (#{currentPage}-1)*#{countPerPage} 
+	    AND RN <![CDATA[ <= ]]> #{currentPage}*#{countPerPage}
+	</select>
+
+	
+	<select id="selectGoodsOrderList" resultMap="goodsMap">
+    	SELECT 
+        GOODS_CD,
+        GOODS_NAME,
+        NORMAL_PRICE,
+        SELL_PRICE,
+        IV_QTY,
+        GOODS_STATUS,
+        CT_CD,
+        SUPPLIER_CD,
+        THUMNAIL_URL,
+        CONTENT
+    	FROM TB_GOODS_INFO
+    	WHERE GOODS_CD = #{goodsCd}
+	</select>
+	
+	<insert id="insertGoodsList">
+        INSERT INTO TB_GOODS_CATEGORY
+            (CT_CD, CT_NAME, CT_LEVEL, UP_CT_CD, REG_DT)
+        SELECT 
+            REPLACE(#{upCtCd}||TO_CHAR(SUBSTR(MAX(CT_CD),(#{ctLevel}*2)-1,2)+1,'00'), ' ', '') AS CT_CD ,
+            #{ctName},
+            #{ctLevel},
+            #{upCtCd},  
+            SYSDATE
+        FROM TB_GOODS_CATEGORY
+        WHERE UP_CT_CD = #{upCtCd}
+        AND CT_LEVEL = #{ctLevel}
+    </insert>
+
+
+	
+	<update id="updateGoodsInfo">
+	    UPDATE TB_GOODS_INFO 
+	    SET
+	        GOODS_NAME = #{goodsName},
+	        NORMAL_PRICE = #{normalPrice},
+	        SELL_PRICE = #{sellPrice},
+	        IV_QTY = #{ivQty},
+	        GOODS_STATUS = #{goodsStatus},
+	        CT_CD = #{dCtCd},
+	        SUPPLIER_CD = #{supplierCd},
+	        THUMNAIL_URL = #{thumnailUrl},
+	        CONTENT = #{content}
+	    WHERE GOODS_CD = #{goodsCd}
+	</update>
+
+	<update id="updateGoodsImg">
+		UPDATE TB_GOODS_IMG
+			SET
+			    IMG_SEQ = (SELECT NVL(MAX(IMG_SEQ),0)+1 FROM TB_GOODS_IMG WHERE GOODS_CD=#{goodsCd}),
+			    IMG_URL = #{imgUrl},
+			    FILE_NAME = #{fileName}
+			WHERE GOODS_CD = #{goodsCd}
+	</update>
+	
+	<insert id="insertGoodsInfo">
+    INSERT INTO TB_GOODS_INFO 
+	    (
+	        GOODS_CD, 
+	        GOODS_NAME, 
+	        NORMAL_PRICE, 
+	        SELL_PRICE, 
+	        IV_QTY, 
+	        GOODS_STATUS, 
+	        CT_CD, 
+	        SUPPLIER_CD, 
+	        THUMNAIL_URL, 
+	        CONTENT, 
+	        REG_DT
+	    )
+	    VALUES 
+	    (
+	        #{goodsCd}, 
+	        #{goodsName}, 
+	        #{normalPrice}, 
+	        #{sellPrice}, 
+	        #{ivQty}, 
+	        #{goodsStatus}, 
+	        #{dCtCd}, 
+	        #{supplierCd}, 
+	        #{thumnailUrl}, 
+	        #{content}, 
+	        SYSDATE
+	    )
+	</insert>
+
+	
+	<insert id="insertGoodsImg">
+		INSERT INTO TB_GOODS_IMG (
+			GOODS_CD, IMG_SEQ, IMG_URL, FILE_NAME, DEL_YN, REG_DT
+		) VALUES (
+			#{goodsCd}, 
+			(SELECT NVL(MAX(IMG_SEQ),0)+1 FROM TB_GOODS_IMG WHERE GOODS_CD=#{goodsCd}), 
+			#{imgUrl}, #{fileName}, 'N', SYSDATE
+		)
+	</insert>
+	
+	<delete id="deleteGoodsImg">
+		DELETE FROM TB_GOODS_IMG
+			WHERE GOODS_CD = #{goodsCd}
+	</delete>
+		
+	
+	<select id="selectSupplierList" resultMap="supplierMap">
+		SELECT SUPPLIER_CD, SUPPLIER_NAME
+		 FROM TB_SUPPLIER_INFO
+	</select>
+</mapper>

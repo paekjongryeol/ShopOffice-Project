@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shop.user.dao.UserDao">
+	
+	<resultMap type="com.shop.table.vo.UserInfoVO" id="userMap">
+		<result property="userId" 		column="user_id" />
+		<result property="userName" 	column="user_name" />
+		<result property="userPwd"	 	column="user_pwd" />
+		<result property="phone"	 	column="phone" />
+		<result property="email"	 	column="email" />
+		<result property="addr" 		column="addr" />
+		<result property="addrDtl" 		column="addr_dtl" />
+		<result property="joinDt"	 	column="join_dt" />
+		<result property="withdrawYn" 	column="withdraw_yn" />
+		<result property="withdrawDt" 	column="withdraw_dt" />
+		<result property="orderCount" 	column="order_count" />
+		<result property="orderPrice" 	column="order_price" />
+	</resultMap>
+	
+	<resultMap type="com.shop.table.vo.OrderInfoVO" id="order2Map">
+		<result property="orderNo" 		column="ORDER_NO" />
+		<result property="userId" 		column="USER_ID" />
+		<result property="orderGoodsName" column="ORDER_GOODS_NAME" />
+		<result property="orderPrice" 	column="ORDER_PRICE" />
+		<result property="orderStatus" 	column="ORDER_STATUS" />
+		<result property="receiveName" 	column="RECEIVE_NAME" />
+		<result property="addr" 		column="ADDR" />
+		<result property="addrDtl" 		column="ADDR_DTL" />
+		<result property="buyQty" 		column="BUY_QTY" />
+	</resultMap>
+	
+	<select id="selectTotalUserCount" resultType="integer">
+		SELECT COUNT(*)
+		FROM TB_USER_INFO
+		where 1=1
+		<if test="userName!=null and userName!=''">
+		and user_name like '%'||#{userName}||'%'
+		</if>
+		<if test="withdrawYn!=null and withdrawYn!=''">
+		and withdraw_yn = #{withdrawYn}
+		</if>
+		<if test="joinDtFrom!=null and joinDtFrom!=''">
+		and to_char(join_dt,'yyyy-mm-dd') <![CDATA[ >= ]]> #{joinDtFrom}
+		</if>
+		<if test="joinDtTo!=null and joinDtTo!=''">
+		and to_char(join_dt,'yyyy-mm-dd') <![CDATA[ <= ]]> #{joinDtTo}
+		</if>
+	</select>
+	
+	<select id="selectUserList" resultMap="userMap">
+	    SELECT 
+	        USER_ID,
+	        USER_NAME,
+	        USER_PWD,
+	        PHONE,
+	        EMAIL,
+	        ADDR,
+	        ADDR_DTL,
+	        JOIN_DT,
+	        WITHDRAW_YN,
+	        WITHDRAW_DT
+	    FROM ( 
+	        SELECT ROWNUM RN, A. 
+	            USER_ID,
+	            USER_NAME,
+	            USER_PWD,
+	            PHONE,
+	            EMAIL,
+	            ADDR,
+	            ADDR_DTL,
+	            JOIN_DT,
+	            WITHDRAW_YN,
+	            WITHDRAW_DT
+	        FROM TB_USER_INFO A
+	        WHERE 1=1
+	        <if test="userName!=null and userName!=''">
+	            AND user_name like '%'||#{userName}||'%'
+	        </if>
+	        <if test="withdrawYn!=null and withdrawYn!=''">
+	            AND withdraw_yn = #{withdrawYn}
+	        </if>
+	        <if test="joinDtFrom!=null and joinDtFrom!=''">
+	            AND to_char(join_dt,'yyyy-mm-dd') <![CDATA[ >= ]]> #{joinDtFrom}
+	        </if>
+	        <if test="joinDtTo!=null and joinDtTo!=''">
+	            AND to_char(join_dt,'yyyy-mm-dd') <![CDATA[ <= ]]> #{joinDtTo}
+	        </if>
+	    )
+	    WHERE RN <![CDATA[ > ]]> (#{currentPage}-1)*#{countPerPage} 
+	    AND RN <![CDATA[ <= ]]> #{currentPage}*#{countPerPage}
+	</select>
+
+
+	
+	<select id="selectUserInfo" resultMap="userMap">
+		SELECT
+			A.USER_ID,
+			A.USER_NAME,
+			A.EMAIL,
+			A.PHONE,
+			A.ADDR,
+			A.ADDR_DTL,
+			A.JOIN_DT,
+			A.WITHDRAW_YN,
+			A.WITHDRAW_DT,
+			B.ORDER_COUNT,
+			B.ORDER_PRICE
+		FROM TB_USER_INFO A LEFT JOIN (
+		SELECT USER_ID, COUNT(*) ORDER_COUNT, SUM(ORDER_PRICE) ORDER_PRICE
+		FROM TB_ORDER_INFO
+		WHERE USER_ID = #{userId}
+		GROUP BY USER_ID
+		) B ON A.USER_ID = B.USER_ID 
+	   WHERE A.USER_ID = #{userId}
+	   	</select>
+	   	
+	   	<select id="selectOrderList" resultMap="order2Map">
+	   		SELECT
+	   			A.ORDER_NO,
+	   			A.USER_ID,
+	   			A.ORDER_GOODS_NAME,
+	   			A.ORDER_PRICE,
+	   			A.ORDER_STATUS,
+	   			A.RECEIVE_NAME,
+	   			A.ADDR,
+	   			A.ADDR_DTL,
+	   			B.BUY_QTY
+	   		FROM TB_ORDER_INFO A ,
+	   			( SELECT ORDER_NO, SUM(BUY_QTY) BUY_QTY
+	   				FROM TB_ORDER_GOODS
+	   				GROUP BY ORDER_NO
+	   			) B
+	   		WHERE A.ORDER_NO = B.ORDER_NO
+	   		AND   A.USER_ID = #{userId}
+	   	</select>
+
+</mapper>

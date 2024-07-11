@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shop.user.dao.InquiryDao">
+	
+	<resultMap type="com.shop.table.vo.InquiryInfoVO" id="userMap">
+		<result property="userId" 			column="user_id" />
+		<result property="boardSeq" 		column="board_seq" />
+		<result property="boardType"	 	column="board_type" />
+		<result property="title"	 		column="title" />
+		<result property="content"	 		column="content" />
+		<result property="attchFile" 		column="attch_file" />
+		<result property="replyYn" 			column="reply_yn" />
+		<result property="replyContent"	 	column="reply_content" />
+		<result property="replyDt" 			column="reply_dt" />
+		<result property="regDt" 			column="reg_dt" />
+		<result property="delYn" 			column="del_yn" />
+		<result property="userName" 		column="user_name" />
+	</resultMap>
+		
+		
+		<select id="selectTotalInquiryCount" resultType="integer">
+			SELECT COUNT(*)
+		    FROM TB_BOARD_INFO A
+		    JOIN TB_USER_INFO B ON A.USER_ID = B.USER_ID
+		    WHERE 1=1
+			<if test="userName != null and userName != ''">
+			        AND B.USER_NAME LIKE '%' || #{userName} || '%'
+			    </if>
+			    <if test="replyYn != null and replyYn != ''">
+			        AND A.REPLY_YN = #{replyYn}
+			    </if>
+			    <if test="regDtFrom != null and regDtFrom != ''">
+			        AND TO_CHAR(A.REG_DT, 'yyyy-mm-dd') <![CDATA[ >= ]]> #{regDtFrom}
+			    </if>
+			    <if test="regDtTo != null and regDtTo != ''">
+			        AND TO_CHAR(A.REG_DT, 'yyyy-mm-dd') <![CDATA[ <= ]]> #{regDtTo}
+			    </if> 
+		</select>
+	
+		<select id="selectInquiryList" resultMap="userMap">
+		    SELECT
+			    BOARD_SEQ,
+			    BOARD_TYPE,
+			    USER_ID,
+			    USER_NAME,
+			    TITLE,
+			    REG_DT,
+			    REPLY_YN,
+			    REPLY_DT
+			FROM (
+			    SELECT
+			        ROWNUM AS RN,
+			        A.BOARD_SEQ,
+			        A.BOARD_TYPE,
+			        B.USER_ID,
+			        B.USER_NAME,
+			        A.TITLE,
+			        A.REG_DT,
+			        A.REPLY_YN,
+			        A.REPLY_DT
+			    FROM TB_BOARD_INFO A
+			    JOIN TB_USER_INFO B ON A.USER_ID = B.USER_ID
+			    WHERE 1=1
+		        <if test="userName != null and userName != ''">
+		            AND B.USER_NAME LIKE '%' || #{userName} || '%'
+		        </if>
+		        <if test="replyYn != null and replyYn != ''">
+		            AND A.REPLY_YN = #{replyYn}
+		        </if>
+		        <if test="regDtFrom != null and regDtFrom != ''">
+		            AND TO_CHAR(A.REG_DT, 'yyyy-mm-dd') <![CDATA[ >= ]]> #{regDtFrom}
+		        </if>
+		        <if test="regDtTo != null and regDtTo != ''">
+		            AND TO_CHAR(A.REG_DT, 'yyyy-mm-dd') <![CDATA[ <= ]]> #{regDtTo}
+		        </if>
+		    ) A
+		    WHERE RN <![CDATA[ > ]]> (#{currentPage}-1)*#{countPerPage} 
+		    AND RN <![CDATA[ <= ]]> #{currentPage}*#{countPerPage}
+		</select>
+
+		<select id="selectInquiryInfo" resultMap="userMap">
+			SELECT
+			    A.TITLE,
+			    A.BOARD_TYPE,
+			    B.USER_ID,
+			    B.USER_NAME,
+			    A.REG_DT,
+			    A.ATTCH_FILE,
+			    A.CONTENT,
+			    A.REPLY_CONTENT
+			FROM  
+			    TB_BOARD_INFO A
+			JOIN  
+			    TB_USER_INFO B ON A.USER_ID = B.USER_ID
+			WHERE 
+			    B.USER_ID = #{userId}
+			AND A.BOARD_SEQ=#{boardSeq}
+
+		</select>
+		
+		<update id="updateInquiryInfo">
+	    UPDATE TB_BOARD_INFO SET
+	    	REPLY_CONTENT = #{replyContent},
+	    	REPLY_YN = 'Y',
+	    	REPLY_DT = SYSDATE
+	    WHERE USER_ID = #{userId}
+	     AND BOARD_SEQ = #{boardSeq}
+		</update>
+</mapper>

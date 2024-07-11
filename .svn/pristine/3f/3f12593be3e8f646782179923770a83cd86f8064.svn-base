@@ -1,0 +1,46 @@
+package com.shop.user.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.shop.table.vo.InquiryInfoVO;
+import com.shop.user.service.InquiryService;
+
+@Controller
+
+public class InquiryController {
+
+	@Autowired
+	InquiryService service;
+	
+	@RequestMapping("/inquiry/list")
+	public String inquiryList() throws Exception {
+		return "inquiry/list";
+	}
+	
+	@RequestMapping("/inquiry/searchlist")
+	@ResponseBody
+	public List<InquiryInfoVO> searchlist(@ModelAttribute("InquiryInfoVO") InquiryInfoVO vo) throws Exception {
+		List<InquiryInfoVO> list = service.selectInquiryList(vo);
+	    return list;
+	}
+	
+	@RequestMapping("/inquiry/userdetail")
+	@ResponseBody
+	public InquiryInfoVO inquirydetail(@ModelAttribute("InquiryInfoVO") InquiryInfoVO vo) throws Exception {
+		vo = (InquiryInfoVO) service.selectInquiryInfo(vo);		
+	    return vo;
+	}
+	
+	@RequestMapping("/inquiryUp")
+	@ResponseBody
+	public InquiryInfoVO inquiryUp(@ModelAttribute("InquiryInfoVO") InquiryInfoVO vo) throws Exception {
+		vo = (InquiryInfoVO) service.updateInquiryInfo(vo);		
+	    return vo;
+	}
+}

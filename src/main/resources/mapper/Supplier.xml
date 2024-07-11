@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shop.supplier.dao.SupplierDao">
+	
+	<resultMap type="com.shop.table.vo.SupplierInfoVO" id="supplierMap">
+	    <result property="supplierCd" column="supplier_cd" />
+	    <result property="supplierName" column="supplier_name" />
+	    <result property="supplierCeo" column="supplier_ceo" />
+	    <result property="phone" column="phone" />
+	    <result property="opName" column="op_name" />
+	    <result property="opPhone" column="op_phone" />
+	    <result property="opEmail" column="op_email" />
+	    <result property="supplierStatus" column="supplier_status" />
+	    <result property="regDt" column="reg_dt" />
+	</resultMap>
+	
+	<select id="selectTotalSupplierCount" resultType="integer">
+			SELECT COUNT(*)
+		    FROM
+		   		TB_SUPPLIER_INFO
+			WHERE 1=1
+			<if test="supplierName!=null and supplierName!=''">
+		    	AND supplier_name LIKE '%'||#{supplierName}||'%'
+			</if>
+			<if test="supplierStatus != null and supplierStatus != ''">
+			    AND SUPPLIER_STATUS = #{supplierStatus}
+			</if>
+	</select>
+	
+	<select id="selectSupplierList" resultMap="supplierMap">
+		SELECT
+		    SUPPLIER_CD,
+		    SUPPLIER_NAME,
+		    SUPPLIER_CEO,
+		    PHONE,
+		    OP_NAME,
+		    OP_PHONE,
+		    OP_EMAIL,
+		    SUPPLIER_STATUS,
+		    REG_DT
+		FROM (
+			SELECT 
+				ROWNUM AS RN,
+				SUPPLIER_CD,
+		    SUPPLIER_NAME,
+		    SUPPLIER_CEO,
+		    PHONE,
+		    OP_NAME,
+		    OP_PHONE,
+		    OP_EMAIL,
+		    SUPPLIER_STATUS,
+		    REG_DT
+		FROM
+		    TB_SUPPLIER_INFO
+		WHERE 1=1
+		<if test="supplierName!=null and supplierName!=''">
+		    AND supplier_name LIKE '%'||#{supplierName}||'%'
+		</if>
+		<if test="supplierStatus != null and supplierStatus != ''">
+			AND SUPPLIER_STATUS = #{supplierStatus}
+		</if>
+		)
+	    WHERE RN <![CDATA[ > ]]> (#{currentPage}-1)*#{countPerPage} 
+	    AND RN <![CDATA[ <= ]]> #{currentPage}*#{countPerPage}
+	</select>
+	
+	<select id="selectSupplierModalList" resultMap="supplierMap">
+    	SELECT 
+        	SUPPLIER_CD,
+		    SUPPLIER_NAME,
+		    SUPPLIER_CEO,
+		    PHONE,
+		    OP_NAME,
+		    OP_PHONE,
+		    OP_EMAIL,
+		    SUPPLIER_STATUS
+    	FROM TB_SUPPLIER_INFO
+    	WHERE SUPPLIER_CD = #{supplierCd}
+	</select>
+	
+	<insert id="insertSupplierInfo" parameterType="com.shop.table.vo.SupplierInfoVO">
+	INSERT INTO TB_SUPPLIER_INFO
+		(SUPPLIER_CD, SUPPLIER_NAME, SUPPLIER_CEO, PHONE, OP_NAME, OP_PHONE, OP_EMAIL, SUPPLIER_STATUS, REG_DT)
+	VALUES
+		(#{supplierCd}, #{supplierName}, #{supplierCeo}, #{phone}, #{opName}, #{opPhone}, #{opEmail}, #{supplierStatus}, SYSDATE)
+	</insert>
+	
+	<update id="updateSupplierInfo" >
+	UPDATE TB_SUPPLIER_INFO
+	SET
+		SUPPLIER_NAME = #{supplierName},
+		SUPPLIER_CEO = #{supplierCeo},
+		PHONE = #{phone},
+		OP_NAME = #{opName},
+		OP_PHONE = #{opPhone},
+		OP_EMAIL = #{opEmail},
+		SUPPLIER_STATUS = #{supplierStatus}
+	WHERE SUPPLIER_CD = #{supplierCd}
+	
+	</update>
+	
+	<resultMap type="com.shop.table.vo.SupplierOrderVO" id="supplierOrderMap">
+	    <result property="orderNo" column="order_no" />
+	    <result property="supplierCd" column="supplier_cd" />   
+	    <result property="orderPrice" column="order_price" />
+	    <result property="orderStatus" column="order_status" />
+	    <result property="regDt" column="reg_dt" />
+	    <result property="incomeDt" column="income_dt" />
+	    
+	</resultMap>
+	
+	<resultMap type="com.shop.table.vo.SupplierGoodsVO" id="supplierGoodsMap">
+	    <result property="orderNo" column="order_no" />
+	    <result property="goodsCd" column="goods_cd" />   
+	    <result property="unitPrice" column="unit_price" />
+	    <result property="buyQty" column="buy_qty" />
+	    <result property="supplierCd" column="supplier_cd" />
+	    <result property="supplierName" column="supplier_name" />   
+	    <result property="orderPrice" column="order_price" />
+	    <result property="orderStatus" column="order_status" />
+	    <result property="regDt" column="reg_dt" />   
+	    <result property="incomeDt" column="income_dt" />
+	    <result property="goodsName" column="goods_name" />
+	    
+	</resultMap>
+	
+	<select id="selectTotalSupplierOrderCount" resultType="integer">
+			SELECT COUNT(*)
+				FROM
+				    TB_SUPPLIER_INFO A, TB_SUPPLIER_ORDER B, TB_SUPPLIER_GOODS C, TB_GOODS_INFO D
+		        WHERE
+		            B.ORDER_NO = C.ORDER_NO
+		        AND
+		            C.GOODS_CD = D.GOODS_CD
+		        AND
+		            A.SUPPLIER_CD = B.SUPPLIER_CD
+			<if test="supplierName!=null and supplierName!=''">
+		    	AND A.SUPPLIER_NAME LIKE '%'||#{supplierName}||'%'
+			</if>
+			<if test="orderStatus!=null and orderStatus!=''">
+			    AND B.order_status = #{orderStatus}
+			</if>
+			<if test="incomeDtFrom!=null and incomeDtFrom!=''">
+				and to_char(income_dt,'yyyy-mm-dd') <![CDATA[ >= ]]> #{incomeDtFrom}
+			</if>
+			<if test="incomeDtTo!=null and incomeDtTo!=''">
+				and to_char(income_dt,'yyyy-mm-dd') <![CDATA[ <= ]]> #{incomeDtTo}
+			</if>
+	</select>
+	
+
+	<select id="selectSupplierOrderList" resultMap="supplierGoodsMap">
+	          SELECT
+				    SUPPLIER_CD,
+				    SUPPLIER_NAME,
+				    ORDER_NO,
+				    INCOME_DT,
+				    GOODS_CD,
+				    GOODS_NAME,
+				    BUY_QTY,
+				    UNIT_PRICE,
+				    ORDER_STATUS,
+		            REG_DT
+		        FROM (
+					SELECT 
+						ROWNUM AS RN,
+						A.SUPPLIER_CD,
+				    A.SUPPLIER_NAME,
+				    C.ORDER_NO,
+				    B.INCOME_DT,
+				    C.GOODS_CD,
+				    D.GOODS_NAME,
+				    C.BUY_QTY,
+				    C.UNIT_PRICE,
+				    B.ORDER_STATUS,
+		            B.REG_DT
+				FROM
+				    TB_SUPPLIER_INFO A, TB_SUPPLIER_ORDER B, TB_SUPPLIER_GOODS C, TB_GOODS_INFO D
+		        WHERE
+		            B.ORDER_NO = C.ORDER_NO
+		        AND
+		            C.GOODS_CD = D.GOODS_CD
+		        AND
+		            A.SUPPLIER_CD = B.SUPPLIER_CD
+	        <if test="supplierName!=null and supplierName!=''">
+	            AND A.SUPPLIER_NAME LIKE '%'||#{supplierName}||'%'
+	        </if>
+	        <if test="orderStatus!=null and orderStatus!=''">
+	            AND B.order_status = #{orderStatus}
+	        </if>
+	        <if test="incomeDtFrom!=null and incomeDtFrom!=''">
+	            AND income_dt <![CDATA[ >= ]]> #{incomeDtFrom}
+	        </if>
+	        <if test="incomeDtTo!=null and incomeDtTo!=''">
+	            AND income_dt <![CDATA[ <= ]]> #{incomeDtTo}
+	        </if>
+	   		 )
+	    WHERE RN <![CDATA[ > ]]> (#{currentPage}-1)*#{countPerPage} 
+	    AND RN <![CDATA[ <= ]]> #{currentPage}*#{countPerPage}
+	</select>
+	
+	<select id="selectOrderList" resultMap="supplierGoodsMap">
+		SELECT 
+		    B.GOODS_CD,
+		    B.GOODS_NAME,
+		    A.BUY_QTY,
+		    A.UNIT_PRICE
+	        FROM
+                TB_SUPPLIER_INFO C, TB_SUPPLIER_ORDER D, TB_SUPPLIER_GOODS A, TB_GOODS_INFO B
+            WHERE
+                D.ORDER_NO = A.ORDER_NO
+            AND
+                A.GOODS_CD = B.GOODS_CD
+            AND
+                C.SUPPLIER_CD = D.SUPPLIER_CD
+		    AND C.SUPPLIER_CD = #{supplierCd}
+	</select>
+	
+	<select id="selectGoodsList" resultMap="supplierGoodsMap">
+		SELECT B.GOODS_CD
+			FROM
+                TB_SUPPLIER_INFO C, TB_SUPPLIER_ORDER D, TB_SUPPLIER_GOODS A, TB_GOODS_INFO B
+            WHERE
+                D.ORDER_NO = A.ORDER_NO
+            AND
+                A.GOODS_CD = B.GOODS_CD
+            AND
+                C.SUPPLIER_CD = D.SUPPLIER_CD
+		    AND C.SUPPLIER_CD = #{supplierCd}
+	</select>
+	
+	<select id="selectSupplierNameList" resultMap="supplierMap">
+		SELECT SUPPLIER_NAME,
+			SUPPLIER_CD
+			FROM TB_SUPPLIER_INFO
+	</select>
+</mapper>

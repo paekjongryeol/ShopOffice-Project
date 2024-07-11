@@ -1,0 +1,24 @@
+package com.shop.table.vo;
+
+public class SupplierInfoVO extends BaseVO{
+	private String supplierCd;
+	private String supplierName;
+	
+	
+	public String getSupplierCd() {
+		return supplierCd;
+	}
+	public void setSupplierCd(String supplierCd) {
+		this.supplierCd = supplierCd;
+	}
+	public String getSupplierName() {
+		return supplierName;
+	}
+	public void setSupplierName(String supplierName) {
+		this.supplierName = supplierName;
+	}
+	
+	
+	
+	
+}
